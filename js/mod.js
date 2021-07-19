@@ -1,7 +1,7 @@
 let modInfo = {
-	name: "The ??? Tree",
+	name: "The TD Tree",
 	id: "test-towerdefence-fk-5",
-	author: "nobody",
+	author: "adsaf123",
 	pointsName: "points",
 	discordName: "",
 	discordLink: "",
