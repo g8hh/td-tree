@@ -223,7 +223,7 @@ addLayer("TD1", {
     },
 
     update(diff) {
-        if(player[this.layer].road === []) {
+        if(player[this.layer].road.length == 0) {
             player[this.layer].road = createRoad(this.layer, GridCols, GridRows)
 
             player[this.layer].road.forEach(id => setGridData(this.layer, id, {
