@@ -223,6 +223,16 @@ addLayer("TD1", {
     },
 
     update(diff) {
+        if(player[this.layer].road === []) {
+            player[this.layer].road = createRoad(this.layer, GridCols, GridRows)
+
+            player[this.layer].road.forEach(id => setGridData(this.layer, id, {
+                tower: false,
+                road: true,
+                enemyCount: getGridData(this.layer, id).enemyCount
+            }))
+        }
+
         player[this.layer].enemies.forEach(enemy => enemyTick(enemy))
         player[this.layer].towers.forEach(tower => towerTick(tower))
 
