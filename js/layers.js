@@ -1,7 +1,6 @@
 const GridRows = 7
 const GridCols = 7
 
-
 addLayer("TD1", {
     name: "battlefield",
     symbol: "B",
@@ -38,16 +37,20 @@ addLayer("TD1", {
 
         onClick(data, id) {
 
-
-            if (id == formatGridId(this.cols, this.rows)) {
+            //if the start or the end -> dont do anything
+            if (id == formatGridId(this.cols, this.rows) || id == formatGridId(0, 0)) {
                 return
             }
+
+            //placing tower
             if (player[this.layer].holdingTower && !data.tower) {
                 player[this.layer].holdingTower = false
                 data.tower = true
                 var pos = decodeGridId(id)
                 player[this.layer].towers.push(new Tower(player[this.layer].towerAttackDelay, player[this.layer].towerDamage, player[this.layer].towerRange, towerParticle, pos.row, pos.col, this.layer))
             }
+
+            //destroying tower
             if (player[this.layer].destroingTowers && data.tower) {
                 data.tower = false
                 var pos = decodeGridId(id)
@@ -60,8 +63,10 @@ addLayer("TD1", {
                 player[this.layer].towers = tmpArray
             }
 
+            //generate path
             player[this.layer].road = createRoad(this.layer, GridCols, GridRows)
 
+            //clear old path
             for (var c = 1; c <= GridCols; c++) {
                 for (var r = 1; r <= GridRows; r++) {
                     setGridData(this.layer, formatGridId(c, r), {
@@ -72,12 +77,24 @@ addLayer("TD1", {
                 }
             }
 
+            //if path is valid -> change the color of grid clickables
             if (player[this.layer].road !== false) {
                 player[this.layer].road.forEach(id => setGridData(this.layer, id, {
                     tower: false,
                     road: true,
                     enemyCount: getGridData(this.layer, id).enemyCount
                 }))
+            } else {
+                //deleting tower that makes path invalid
+                data.tower = false
+                var pos = decodeGridId(id)
+                tmpArray = Array()
+                for (var i = 0; i < player[this.layer].towers.length; i++) {
+                    if (player[this.layer].towers[i].col !== pos.col && player[this.layer].towers.row !== pos.row) {
+                        tmpArray.push(player[this.layer].towers[i])
+                    }
+                }
+                player[this.layer].towers = tmpArray
             }
         },
 

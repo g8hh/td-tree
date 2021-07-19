@@ -1,3 +1,5 @@
+//File containing "stuffs" needed for mod but not fitable to other categories
+
 /**
  * 
  * @param {String} layer Layer ID
@@ -5,7 +7,6 @@
  * @param {Number} rows Number of rows
  * @returns False if can't get from right-bottom to left-up, otherwise array containing grid IDs creating shortest path
  */
-
 function createRoad(layer, cols, rows) {
 
     var queue = [[cols, rows]]
@@ -78,7 +79,7 @@ function formatGridId(col, row) {
 /**
  * 
  * @param {String | Number} id 
- * @returns Object {col, row}
+ * @returns Object {col, row} or undefined if id is undefined
  */
 function decodeGridId(id) {
     if (id !== undefined) {
@@ -97,4 +98,5 @@ function decodeGridId(id) {
             }
         }
     }
+    return undefined
 }

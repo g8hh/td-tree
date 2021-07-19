@@ -1,4 +1,8 @@
+//File containing all tower related stuff
+
+//particle used as model for towers' bullets
 const towerParticle = {
+    //if layer would be used istead of _layer, the particle would be deleted when switching tabs. We don't want that
     _layer: undefined,
     damage: 0,
     x: 0,
@@ -14,8 +18,11 @@ const towerParticle = {
     update() {
         if (this.target !== undefined) {
 
+            // == if target is offgrid(non reachable)
             if (!this.target.active) {
+                //due to every tower function requesting tower I had to make dummy tower
                 this.target = towerTarget({ range: this.towerRange, col: this.towerCol, row: this.towerRow }, player[this._layer].enemies)
+                // == if no arget if found, delete particle
                 if (this.target === undefined) {
                     Vue.delete(particles, this.id)
                     return
@@ -26,14 +33,15 @@ const towerParticle = {
             if (div !== null) {
                 var boundingRect = div.getBoundingClientRect()
             }
-            var e = enemyGetPos(this.target)
 
+            var e = enemyGetPos(this.target)
             if (e === undefined) {
                 return
             }
 
-            dist = Math.hypot(e.col - this.gridX, e.row - this.gridY)
+            var dist = Math.hypot(e.col - this.gridX, e.row - this.gridY)
 
+            //detecting "collision" and speed limiting wen close
             if (dist < .1) {
                 enemyDamage(this.target, this.damage)
                 Vue.delete(particles, this.id)
@@ -44,15 +52,18 @@ const towerParticle = {
                 this.speed = player[this._layer].maxParticleSpeed
             }
 
+            //moving particle
             this.gridX += ((e.col - this.gridX) / dist) * this.speed
             this.gridY += ((e.row - this.gridY) / dist) * this.speed
 
+            //calculate position on a display
             if (div !== null) {
                 this.x = boundingRect.left + ((boundingRect.right - boundingRect.left) * ((this.gridX - 0.5) / GridCols))
                 this.y = boundingRect.top + ((boundingRect.bottom - boundingRect.top) * ((this.gridY - 0.5) / GridRows))
             }
         }
 
+        //making the particle "invisible" when in diffrent tab
         if (this._layer !== player.tab) {
             this.width = this.height = 0
         } else {
@@ -88,10 +99,7 @@ class Tower {
     }
 }
 
-/**
- * 
- * @param {Tower} tower 
- */
+//called every tick for every tower
 function towerTick(tower) {
     tower.waitTime++
     if (tower.waitTime >= tower.attackDelay) {
@@ -101,10 +109,7 @@ function towerTick(tower) {
     }
 }
 
-/**
- * 
- * @param {Tower} tower 
- */
+//called when tower is attacting
 function towerAttack(tower) {
     if (tower.target !== undefined) {
         tower.particle.target = tower.target
@@ -119,11 +124,7 @@ function towerAttack(tower) {
     }
 }
 
-/**
- * 
- * @param {Tower} tower 
- * @param {Enemy[]} enemies 
- */
+//finds a target in range of tower
 function towerTarget(tower, enemies) {
     for (var i = 0; i < enemies.length; i++) {
         var a = enemyGetPos(enemies[i])
