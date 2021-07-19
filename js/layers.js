@@ -50,22 +50,6 @@ addLayer("TD1", {
                 player[this.layer].towers.push(new Tower(player[this.layer].towerAttackDelay, player[this.layer].towerDamage, player[this.layer].towerRange, towerParticle, pos.row, pos.col, this.layer))
             }
 
-            //destroying tower
-            if (player[this.layer].destroingTowers && data.tower) {
-                data.tower = false
-                var pos = decodeGridId(id)
-                tmpArray = Array()
-                for (var i = 0; i < player[this.layer].towers.length; i++) {
-                    if (player[this.layer].towers[i].col !== pos.col && player[this.layer].towers.row !== pos.row) {
-                        tmpArray.push(player[this.layer].towers[i])
-                    }
-                }
-                player[this.layer].towers = tmpArray
-            }
-
-            //generate path
-            player[this.layer].road = createRoad(this.layer, GridCols, GridRows)
-
             //clear old path
             for (var c = 1; c <= GridCols; c++) {
                 for (var r = 1; r <= GridRows; r++) {
@@ -77,16 +61,18 @@ addLayer("TD1", {
                 }
             }
 
-            //if path is valid -> change the color of grid clickables
-            if (player[this.layer].road !== false) {
-                player[this.layer].road.forEach(id => setGridData(this.layer, id, {
-                    tower: false,
-                    road: true,
-                    enemyCount: getGridData(this.layer, id).enemyCount
-                }))
-            } else {
-                //deleting tower that makes path invalid
+            //generate path
+            player[this.layer].road = createRoad(this.layer, GridCols, GridRows)
+
+            //destroying tower if requested or path is invalid
+            if ((player[this.layer].destroingTowers && data.tower) || player[this.layer].road === false) {
                 data.tower = false
+                //dont know why but second check is needed
+                setGridData(this.layer, id, {
+                    tower: false,
+                    road: false,
+                    enemyCount: getGridData(this.layer, id).enemyCount
+                })
                 var pos = decodeGridId(id)
                 tmpArray = Array()
                 for (var i = 0; i < player[this.layer].towers.length; i++) {
@@ -96,6 +82,14 @@ addLayer("TD1", {
                 }
                 player[this.layer].towers = tmpArray
             }
+
+            player[this.layer].road = createRoad(this.layer, GridCols, GridRows)
+
+            player[this.layer].road.forEach(id => setGridData(this.layer, id, {
+                tower: false,
+                road: true,
+                enemyCount: getGridData(this.layer, id).enemyCount
+            }))
         },
 
         getDisplay(data, id) {
