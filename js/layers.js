@@ -338,7 +338,7 @@ addLayer("TD1", {
             spawnDelay: 100,
             spawnWait: 0,
             enemyDelay: 100,
-            maxParticleSpeed: .1,
+            maxParticleSpeed: .3,
             currencyMultiplayer: 1,
             spawnCount: 1,
             boughtTowers: {
