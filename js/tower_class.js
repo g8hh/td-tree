@@ -22,7 +22,7 @@ function createTower(id, layer, row, col) {
     if(id == "normal-tower") {
         tower.attackDelay = 30
         tower.range = 5
-        tower.damage = 1
+        tower.damage = 1 + getBuyableAmount(tower.layer, "11").toNumber()
     }
 
     return tower
