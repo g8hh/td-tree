@@ -1,6 +1,10 @@
 const GridRows = 7
 const GridCols = 7
 
+var towerIDs = {
+    "normal-tower": normalTower
+}
+
 addLayer("TD1", {
     name: "battlefield",
     symbol: "B",
@@ -9,11 +13,21 @@ addLayer("TD1", {
     color: "#FFFFFF",
     resource: "essence",
 
-    tabFormat: [
-        "main-display",
-        "grid",
-        "clickables",
-    ],
+    tabFormat: {
+        "Main tab": {
+            content: [
+                "main-display",
+                "grid",
+                "clickables"
+            ]
+        },
+        "Upgrades": {
+            content: [
+                "main-display",
+                "buyables"
+            ]
+        }
+    },
 
     grid: {
         rows: GridRows,
@@ -47,7 +61,7 @@ addLayer("TD1", {
                 player[this.layer].holdingTower = false
                 data.tower = true
                 var pos = decodeGridId(id)
-                player[this.layer].towers.push(new Tower(player[this.layer].towerAttackDelay, player[this.layer].towerDamage, player[this.layer].towerRange, towerParticle, pos.row, pos.col, this.layer))
+                player[this.layer].towers.push(createTower("normal-tower", this.layer, pos.row, pos.col))
             }
 
             //clear old path
@@ -147,8 +161,6 @@ addLayer("TD1", {
             onClick() {
                 player[this.layer].running = !player[this.layer].running
                 player[this.layer].holdingTower = false
-
-
             }
         },
     },
@@ -160,7 +172,7 @@ addLayer("TD1", {
             canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
             buy() {
                 player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
-                player[this.layer].towerDamage += 1
+                player[this.layer].towers.forEach(tower => { if (tower.id == "normal-tower") { tower.damage += 1 } })
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
         },
@@ -213,17 +225,14 @@ addLayer("TD1", {
             spawnDelay: 100,
             spawnWait: 0,
             enemyDelay: 100,
-            towerAttackDelay: 30,
-            towerRange: 5,
             maxParticleSpeed: .1,
-            towerDamage: 1,
             currencyMultiplayer: 1,
             spawnCount: 1,
         }
     },
 
     update(diff) {
-        if(player[this.layer].road.length == 0) {
+        if (player[this.layer].road.length == 0) {
             player[this.layer].road = createRoad(this.layer, GridCols, GridRows)
 
             player[this.layer].road.forEach(id => setGridData(this.layer, id, {
@@ -234,7 +243,7 @@ addLayer("TD1", {
         }
 
         player[this.layer].enemies.forEach(enemy => enemyTick(enemy))
-        player[this.layer].towers.forEach(tower => towerTick(tower))
+        player[this.layer].towers.forEach(tower => towerIDs[tower.id].tick(tower))
 
         while (player[this.layer].enemies.length > 0 && !player[this.layer].enemies[0].active) {
             player[this.layer].enemies.shift()
@@ -248,35 +257,6 @@ addLayer("TD1", {
                 player[this.layer].enemies.push(new Enemy(player[this.layer].spawnCount, player[this.layer].road, 0, player[this.layer].enemyDelay, true, this.layer))
             }
         }
-    },
-
-    baseAmount() { return player.points },
-    layerShown() { return true }
-})
-
-addLayer("EB1", {
-    name: "engineering bay",
-    symbol: "E",
-    position: 1,
-    row: 0,
-    color: "#FFFFFF",
-    resource: "essence",
-
-    tabFormat: [
-        "main-display",
-        "blank",
-        ["layer-proxy", ["TD1", ["buyables"]]],
-    ],
-
-    startData() {
-        return {
-            unlocked: true,
-            points: new Decimal(0),
-        }
-    },
-
-    update(diff) {
-        player[this.layer].points = player["TD1"].points
     },
 
     baseAmount() { return player.points },
