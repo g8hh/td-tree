@@ -141,9 +141,6 @@ var normalTower = {
             } else {
                 this.width = this.height = 35
             }
-    
-    
         }
     }
-
 }
