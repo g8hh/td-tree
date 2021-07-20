@@ -172,8 +172,8 @@ addLayer("TD1", {
             canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
             buy() {
                 player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
-                player[this.layer].towers.forEach(tower => { if (tower.id == "normal-tower") { tower.damage += 1 } })
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                player[this.layer].towers.forEach(tower => { if (tower.id == "normal-tower") { tower.damage = getBuyableAmount(this.layer, this.id).toNumber() } })
             },
         },
 
