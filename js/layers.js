@@ -42,7 +42,8 @@ addLayer("TD1", {
                 ["row", [["buyable", 11],
                          ["buyable", 12]]],
                 ["row", [["buyable", 13],
-                         ["buyable", 14]]],       
+                         ["buyable", 14]]], 
+                ["row", [["buyable", 15]]]      
             ]
         }
     },
@@ -285,6 +286,17 @@ addLayer("TD1", {
             }
         },
 
+        15: {
+            cost(x) { return new Decimal(10).pow(x).mul(1).floor() },
+            display() { return "Increase bullet speed by .1<br><b>Currently: </b>" + player[this.layer].maxParticleSpeed + "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
+            canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
+            buy() {
+                player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
+                player[this.layer].maxParticleSpeed += .1
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            }
+        },
+
         "normal-tower-buyer": {
             cost(x) { return new Decimal(5).pow(x).mul(5).floor() },
             display() { return "Increase number of normal towers by one<br><b>Currenly: </b>" + getBuyableAmount(this.layer, this.id) +  "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
@@ -338,7 +350,7 @@ addLayer("TD1", {
             spawnDelay: 100,
             spawnWait: 0,
             enemyDelay: 100,
-            maxParticleSpeed: .3,
+            maxParticleSpeed: .1,
             currencyMultiplayer: 1,
             spawnCount: 1,
             boughtTowers: {
