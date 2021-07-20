@@ -102,10 +102,12 @@ addLayer("TD1", {
                     setGridData(this.layer, formatGridId(c, r), {
                         tower: getGridData(this.layer, formatGridId(c, r)).tower,
                         road: false,
-                        enemyCount: getGridData(this.layer, formatGridId(c, r)).enemyCount
+                        enemyCount: 0
                     })
                 }
             }
+            player[this.layer].enemies = []
+
 
             //generate path
             player[this.layer].road = createRoad(this.layer, GridCols, GridRows)
