@@ -19,7 +19,7 @@ function createTower(id, layer, row, col) {
     tower.row = row
     tower.col = col
 
-    if(id == "normal-tower") {
+    if (id == "normal-tower") {
         tower.attackDelay = 30
         tower.range = 5
         tower.damage = 1 + getBuyableAmount(tower.layer, "11").toNumber()
@@ -89,7 +89,7 @@ var normalTower = {
         speed: 10,
         update() {
             if (this.target !== undefined) {
-    
+
                 // == if target is offgrid(non reachable)
                 if (!this.target.active) {
                     //due to every tower function requesting tower I had to make dummy tower
@@ -100,19 +100,19 @@ var normalTower = {
                         return
                     }
                 }
-    
+
                 var div = document.getElementById("grid-div")
                 if (div !== null) {
                     var boundingRect = div.getBoundingClientRect()
                 }
-    
+
                 var e = enemyGetPos(this.target)
                 if (e === undefined) {
                     return
                 }
-    
+
                 var dist = Math.hypot(e.col - this.gridX, e.row - this.gridY)
-    
+
                 //detecting "collision" and speed limiting wen close
                 if (dist < .1) {
                     enemyDamage(this.target, this.damage)
@@ -123,18 +123,18 @@ var normalTower = {
                 } else {
                     this.speed = player[this._layer].maxParticleSpeed
                 }
-    
+
                 //moving particle
                 this.gridX += ((e.col - this.gridX) / dist) * this.speed
                 this.gridY += ((e.row - this.gridY) / dist) * this.speed
-    
+
                 //calculate position on a display
                 if (div !== null) {
                     this.x = boundingRect.left + ((boundingRect.right - boundingRect.left) * ((this.gridX - 0.5) / GridCols))
                     this.y = boundingRect.top + ((boundingRect.bottom - boundingRect.top) * ((this.gridY - 0.5) / GridRows))
                 }
             }
-    
+
             //making the particle "invisible" when in diffrent tab
             if (this._layer !== player.tab || player.subtabs[this._layer].mainTabs !== "Main tab") {
                 this.width = this.height = 0
@@ -143,4 +143,11 @@ var normalTower = {
             }
         }
     }
+}
+
+var wallTower = {
+    tick(tower) { },
+    attack(tower, particle) { },
+    target(tower, enemies) { },
+    particle: {}
 }

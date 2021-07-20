@@ -2,7 +2,13 @@ const GridRows = 7
 const GridCols = 7
 
 var towerIDs = {
-    "normal-tower": normalTower
+    "normal-tower": normalTower,
+    "wall-tower": wallTower
+}
+
+var towerColors = {
+    "normal-tower": "#00FF00",
+    "wall-tower": "#0000FF" 
 }
 
 addLayer("TD1", {
@@ -17,14 +23,26 @@ addLayer("TD1", {
         "Main tab": {
             content: [
                 "main-display",
+                ["display-text", function() { return "You have<br>" 
+                                                    + player[this.layer].placedTowers["normal-tower"] + "/" + player[this.layer].boughtTowers["normal-tower"] + " Normal towers<br>"
+                                                    + player[this.layer].placedTowers["wall-tower"] + "/" + player[this.layer].boughtTowers["wall-tower"] + " Walls<br>"}],
                 "grid",
-                "clickables"
+                ["row", [["clickable", "running-button"]]],
+                ["row", [["clickable", "normal-tower-selector"], 
+                         ["clickable", "wall-tower-selector"], 
+                         ["clickable", "tower-destroyer"]]],
+                ["row", [["buyable", "normal-tower-buyer"],
+                         ["buyable", "wall-tower-buyer"],
+                         ["buyable", "blank"]]]
             ]
         },
         "Upgrades": {
             content: [
                 "main-display",
-                "buyables"
+                ["row", [["buyable", 11],
+                         ["buyable", 12]]],
+                ["row", [["buyable", 13],
+                         ["buyable", 14]]],       
             ]
         }
     },
@@ -57,13 +75,27 @@ addLayer("TD1", {
             }
 
             //placing tower
-            if (player[this.layer].holdingTower && !data.tower) {
-                player[this.layer].holdingTower = false
-                data.tower = true
+            if (data.tower === false && player[this.layer].currentTower != "none" && player[this.layer].placedTowers[player[this.layer].currentTower] < player[this.layer].boughtTowers[player[this.layer].currentTower]) {
+                data.tower = player[this.layer].currentTower
+                player[this.layer].placedTowers[player[this.layer].currentTower]++
                 var pos = decodeGridId(id)
-                player[this.layer].towers.push(createTower("normal-tower", this.layer, pos.row, pos.col))
+                player[this.layer].towers.push(createTower(player[this.layer].currentTower, this.layer, pos.row, pos.col))
+            } else if (player[this.layer].currentTower != "none" && player[this.layer].placedTowers[player[this.layer].currentTower] < player[this.layer].boughtTowers[player[this.layer].currentTower]) {
+                var pos = decodeGridId(id)
+                tmpArray = Array()
+                for (var i = 0; i < player[this.layer].towers.length; i++) {
+                    if (player[this.layer].towers[i].col !== pos.col || player[this.layer].towers[i].row !== pos.row) {
+                        tmpArray.push(player[this.layer].towers[i])
+                    }
+                }
+                
+                player[this.layer].towers = tmpArray
+                
+                player[this.layer].placedTowers[data.tower]--
+                data.tower = player[this.layer].currentTower
+                player[this.layer].placedTowers[player[this.layer].currentTower]++
+                player[this.layer].towers.push(createTower(player[this.layer].currentTower, this.layer, pos.row, pos.col))
             }
-
             //clear old path
             for (var c = 1; c <= GridCols; c++) {
                 for (var r = 1; r <= GridRows; r++) {
@@ -79,7 +111,8 @@ addLayer("TD1", {
             player[this.layer].road = createRoad(this.layer, GridCols, GridRows)
 
             //destroying tower if requested or path is invalid
-            if ((player[this.layer].destroingTowers && data.tower) || player[this.layer].road === false) {
+            if (data.tower != false && (player[this.layer].road === false || player[this.layer].currentTower == "none") ) {
+                player[this.layer].placedTowers[data.tower]--
                 data.tower = false
                 //dont know why but second check is needed
                 setGridData(this.layer, id, {
@@ -90,7 +123,7 @@ addLayer("TD1", {
                 var pos = decodeGridId(id)
                 tmpArray = Array()
                 for (var i = 0; i < player[this.layer].towers.length; i++) {
-                    if (player[this.layer].towers[i].col !== pos.col && player[this.layer].towers.row !== pos.row) {
+                    if (player[this.layer].towers[i].col !== pos.col || player[this.layer].towers[i].row !== pos.row) {
                         tmpArray.push(player[this.layer].towers[i])
                     }
                 }
@@ -111,47 +144,25 @@ addLayer("TD1", {
         },
 
         getStyle(data, id) {
+            var color = "#000000"
+            if (data.enemyCount) {
+                color = "#FF0000"
+            } else if (data.road) {
+                color = "#707070"
+            } else {
+                color = towerColors[data.tower]
+            }
+
             return {
-                "background-color": data.enemyCount ? "#FF0000" :
-                    data.road ? "#707070" :
-                        data.tower ? "#00FF00" :
-                            "#FFFFFF"
+                "background-color": color
             }
         }
     },
 
     clickables: {
-        11: {
+        "running-button": {
             display() {
-                return player[this.layer].holdingTower ? "Click this to discard tower" : "Click this to place tower"
-            },
-
-            canClick() {
-                return !player[this.layer].destroingTowers && !player[this.layer].running
-            },
-
-            onClick() {
-                player[this.layer].holdingTower = !player[this.layer].holdingTower
-            }
-        },
-
-        12: {
-            display() {
-                return player[this.layer].destroingTowers ? "Click here to stop destroing towers" : "Click here to destroy towers"
-            },
-
-            canClick() {
-                return !player[this.layer].holdingTower && !player[this.layer].running
-            },
-
-            onClick() {
-                player[this.layer].destroingTowers = !player[this.layer].destroingTowers
-            }
-        },
-
-        13: {
-            display() {
-                return player[this.layer].running ? "Pause" : "Run"
+                return player[this.layer].running ? "<h3>Pause</h3>" : "<h3>Run</h3>"
             },
 
             canClick() {
@@ -160,15 +171,77 @@ addLayer("TD1", {
 
             onClick() {
                 player[this.layer].running = !player[this.layer].running
-                player[this.layer].holdingTower = false
+            },
+
+            style: {
+                "width": "100px",
+                "height": "100px"
             }
         },
+
+        "normal-tower-selector": {
+            display() {
+                return "Click this to place normal towers"
+            },
+
+            canClick() {
+                return player[this.layer].currentTower != "normal-tower" 
+            },
+
+            onClick() {
+                return player[this.layer].currentTower = "normal-tower" 
+            },
+
+            style: {
+                "width": "100px",
+                "height": "100px"
+            }
+        },
+
+        "wall-tower-selector": {
+            display() {
+                return "Click this to place walls"
+            },
+
+            canClick() {
+                return player[this.layer].currentTower != "wall-tower" 
+            },
+
+            onClick() {
+                return player[this.layer].currentTower = "wall-tower" 
+            },
+
+            style: {
+                "width": "100px",
+                "height": "100px"
+            }
+        },
+
+        "tower-destroyer": {
+            display() {
+                return "Click this to destroy towers"
+            },
+
+            canClick() {
+                return player[this.layer].currentTower != "none"
+            },
+
+            onClick() {
+                return player[this.layer].currentTower = "none" 
+            },
+
+            style: {
+                "width": "100px",
+                "height": "100px"
+            }
+        }
+
     },
 
     buyables: {
         11: {
             cost(x) { return new Decimal(1.2).pow(x).mul(1).floor() },
-            display() { return "Upgrade damage by 1<br> <b>Currently: </b>" + getBuyableAmount(this.layer, this.id).add(1).toString() + "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
+            display() { return "Upgrade damage by 1<br><b>Currently: </b>" + getBuyableAmount(this.layer, this.id).add(1).toString() + "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
             canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
             buy() {
                 player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
@@ -179,29 +252,29 @@ addLayer("TD1", {
 
         12: {
             cost(x) { return new Decimal(1.5).pow(x).mul(1).floor() },
-            display() { return "Decrease enemy delay by 5<br> <b>Currently: </b>" + new Decimal(100).sub(getBuyableAmount(this.layer, this.id).mul(5)).toString() + "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
+            display() { return "Decrease enemy delay by 5<br><b>Currently: </b>" + new Decimal(100).sub(getBuyableAmount(this.layer, this.id).mul(5)).toString() + "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
             canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) && getBuyableAmount(this.layer, this.id).lt(19) },
             buy() {
                 player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
-                player[this.layer].spawnDelay = player[this.layer].enemyDelay -= 5
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                player[this.layer].spawnDelay = player[this.layer].enemyDelay -= 5
             }
         },
 
         13: {
             cost(x) { return new Decimal(3).pow(x).mul(1).floor() },
-            display() { return "Increase currency multiplayer by 1<br> <b>Currently: </b>" + player[this.layer].currencyMultiplayer + "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
+            display() { return "Increase currency multiplayer by 1<br><b>Currently: </b>" + player[this.layer].currencyMultiplayer + "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
             canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
             buy() {
                 player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
-                player[this.layer].currencyMultiplayer += 1
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+                player[this.layer].currencyMultiplayer += 1
             }
         },
 
         14: {
             cost(x) { return new Decimal(4).pow(x).mul(1).floor() },
-            display() { return "Increase spawn count by 1<br> <b>Currently: </b>" + player[this.layer].spawnCount + "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
+            display() { return "Increase spawn count by 1<br><b>Currently: </b>" + player[this.layer].spawnCount + "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
             canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
             buy() {
                 player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
@@ -210,15 +283,53 @@ addLayer("TD1", {
             }
         },
 
+        "normal-tower-buyer": {
+            cost(x) { return new Decimal(5).pow(x).mul(5).floor() },
+            display() { return "Increase number of normal towers by one<br><b>Currenly: </b>" + getBuyableAmount(this.layer, this.id) +  "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
+            canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
+            buy() {
+                player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
+                player[this.layer].boughtTowers["normal-tower"] += 1
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            style: {
+                "width": "100px",
+                "height": "100px"
+            }
+
+        },
+
+        "wall-tower-buyer": {
+            cost(x) { return new Decimal(2.5).pow(x).mul(3).floor() },
+            display() { return "Increase number of walls by one<br><b>Currenly: </b>" + getBuyableAmount(this.layer, this.id) +  "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
+            canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
+            buy() {
+                player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
+                player[this.layer].boughtTowers["wall-tower"] += 1
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            style: {
+                "width": "100px",
+                "height": "100px"
+            }
+        },
+
+        "blank": {
+            canAfford() { return true },
+            style: {
+                "width": "100px",
+                "height": "100px"
+            }
+        }
+
     },
 
     startData() {
         return {
             unlocked: true,
-            points: new Decimal(0),
-            holdingTower: false,
+            points: new Decimal(10),
             running: false,
-            destroingTowers: false,
+            currentTower: "none",
             enemies: [],
             towers: [],
             road: [],
@@ -228,6 +339,14 @@ addLayer("TD1", {
             maxParticleSpeed: .1,
             currencyMultiplayer: 1,
             spawnCount: 1,
+            boughtTowers: {
+                "normal-tower": 1,
+                "wall-tower": 1
+            },
+            placedTowers: {
+                "normal-tower": 0,
+                "wall-tower": 0
+            },
         }
     },
 
