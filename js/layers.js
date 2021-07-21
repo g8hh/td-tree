@@ -249,7 +249,7 @@ addLayer("TD1", {
             buy() {
                 player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
-                player[this.layer].towers.forEach(tower => { if (tower.id == "normal-tower") { tower.damage = 1 + getBuyableAmount(this.layer, this.id).toNumber() } })
+                player[this.layer].towerStats["normal-tower"].damage = 1 + getBuyableAmount(this.layer, this.id).toNumber()
             },
         },
 
@@ -361,6 +361,18 @@ addLayer("TD1", {
                 "normal-tower": 0,
                 "wall-tower": 0
             },
+            towerStats: {
+                "normal-tower": {
+                    attackDelay: 30,
+                    range: 5,
+                    damage: 1,
+                },
+                "wall-tower": {
+                    attackDelay: -1,
+                    range: -1,
+                    damage: -1
+                }
+            }
         }
     },
 

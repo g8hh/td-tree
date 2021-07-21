@@ -5,9 +5,6 @@ var towerTemplate = {
     row: -1,
     col: -1,
 
-    attackDelay: -1,
-    range: -1,
-    damage: -1,
     waitTime: 0,
     target: undefined,
 }
@@ -18,13 +15,6 @@ function createTower(id, layer, row, col) {
     tower.layer = layer
     tower.row = row
     tower.col = col
-
-    if (id == "normal-tower") {
-        tower.attackDelay = 30
-        tower.range = 5
-        tower.damage = 1 + getBuyableAmount(tower.layer, "11").toNumber()
-    }
-
     return tower
 }
 
@@ -33,7 +23,7 @@ var normalTower = {
     //called every tick for every tower
     tick(tower) {
         tower.waitTime++
-        if (tower.waitTime >= tower.attackDelay) {
+        if (tower.waitTime >= player[tower.layer].towerStats[tower.id].attackDelay) {
             tower.waitTime = 0
             tower.target = towerIDs[tower.id].target(tower, player[tower.layer].enemies)
             towerIDs[tower.id].attack(tower, towerIDs[tower.id].particle)
@@ -47,8 +37,8 @@ var normalTower = {
             particle.target = tower.target
             particle.gridX = tower.col
             particle.gridY = tower.row
-            particle.damage = tower.damage
-            particle.towerRange = tower.range
+            particle.damage = player[tower.layer].towerStats[tower.id].damage
+            particle.towerRange = player[tower.layer].towerStats[tower.id].range
             particle.towerCol = tower.col
             particle.towerRow = tower.row
             particle.towerID = tower.id
@@ -64,7 +54,7 @@ var normalTower = {
                 continue
             }
             var dist = Math.hypot(a.col - tower.col, a.row - tower.row)
-            if (dist < tower.range) {
+            if (dist < player[tower.layer].towerStats[tower.id].range) {
                 return enemies[i]
             }
         }
@@ -93,7 +83,7 @@ var normalTower = {
                 // == if target is offgrid(non reachable)
                 if (!this.target.active) {
                     //due to every tower function requesting tower I had to make dummy tower
-                    this.target = towerIDs[this.towerID].target({ range: this.towerRange, col: this.towerCol, row: this.towerRow }, player[this._layer].enemies)
+                    this.target = towerIDs[this.towerID].target({ layer: this._layer, id: this.towerID, range: this.towerRange, col: this.towerCol, row: this.towerRow }, player[this._layer].enemies)
                     // == if no arget if found, delete particle
                     if (this.target === undefined) {
                         Vue.delete(particles, this.id)
