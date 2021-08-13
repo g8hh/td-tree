@@ -3,12 +3,14 @@ const GridCols = 7
 
 var towerIDs = {
     "normal-tower": normalTower,
-    "wall-tower": wallTower
+    "wall-tower": wallTower,
+    "spread-tower": spreadTower
 }
 
 var towerColors = {
     "normal-tower": "#00FF00",
-    "wall-tower": "#0000FF" 
+    "wall-tower": "#0000FF",
+    "spread-tower": "#FFAA00"
 }
 
 addLayer("TD1", {
@@ -23,27 +25,54 @@ addLayer("TD1", {
         "Main tab": {
             content: [
                 "main-display",
-                ["display-text", function() { return "You have<br>" 
-                                                    + player[this.layer].placedTowers["normal-tower"] + "/" + player[this.layer].boughtTowers["normal-tower"] + " Normal towers<br>"
-                                                    + player[this.layer].placedTowers["wall-tower"] + "/" + player[this.layer].boughtTowers["wall-tower"] + " Walls<br>"}],
+                ["display-text", function () {
+                    return "You have<br>"
+                        + player[this.layer].placedTowers["normal-tower"] + "/" + player[this.layer].boughtTowers["normal-tower"] + " Normal towers<br>"
+                        + player[this.layer].placedTowers["wall-tower"] + "/" + player[this.layer].boughtTowers["wall-tower"] + " Walls<br>"
+                        + player[this.layer].placedTowers["spread-tower"] + "/" + player[this.layer].boughtTowers["spread-tower"] + " Spread Towers<br>"
+                }],
                 "grid",
-                ["row", [["clickable", "running-button"]]],
-                ["row", [["clickable", "normal-tower-selector"], 
-                         ["clickable", "wall-tower-selector"], 
-                         ["clickable", "tower-destroyer"]]],
-                ["row", [["buyable", "normal-tower-buyer"],
-                         ["buyable", "wall-tower-buyer"],
-                         ["buyable", "blank"]]]
+                ["row", [
+                    ["clickable", "running-button"]
+                ]],
+                ["row", [
+                    ["clickable", "normal-tower-selector"],
+                    ["clickable", "wall-tower-selector"],
+                    ["clickable", "spread-tower-selector"],
+                    ["clickable", "tower-destroyer"]
+                ]],
+                ["row", [
+                    ["buyable", "normal-tower-buyer"],
+                    ["buyable", "wall-tower-buyer"],
+                    ["buyable", "spread-tower-buyer"],
+                    ["buyable", "blank"]
+                ]]
             ]
         },
         "Upgrades": {
             content: [
                 "main-display",
-                ["row", [["buyable", 11],
-                         ["buyable", 12]]],
-                ["row", [["buyable", 13],
-                         ["buyable", 14]]], 
-                ["row", [["buyable", 15]]]      
+                "blank",
+                ["display-text", "Enemy related upgrades"],
+                "blank",
+                ["row", [
+                    ["buyable", "enemy-count"],
+                    ["buyable", "enemy-delay"],
+                    ["buyable", "currency-multiplayer"]
+                ]],
+                "blank",
+                ["display-text", "Normal Tower related upgrades"],
+                "blank",
+                ["row", [
+                    ["buyable", "normal-tower-damage-upgrade"],
+                    ["buyable", "normal-tower-bullet-speed"]
+                ]],
+                "blank",
+                ["display-text", "Spread Tower related upgrades"],
+                "blank",
+                ["row", [
+                    ["buyable", "spread-tower-count-upgrade"],
+                ]]
             ]
         }
     },
@@ -89,9 +118,9 @@ addLayer("TD1", {
                         tmpArray.push(player[this.layer].towers[i])
                     }
                 }
-                
+
                 player[this.layer].towers = tmpArray
-                
+
                 player[this.layer].placedTowers[data.tower]--
                 data.tower = player[this.layer].currentTower
                 player[this.layer].placedTowers[player[this.layer].currentTower]++
@@ -114,7 +143,7 @@ addLayer("TD1", {
             player[this.layer].road = createRoad(this.layer, GridCols, GridRows)
 
             //destroying tower if requested or path is invalid
-            if (data.tower != false && (player[this.layer].road === false || player[this.layer].currentTower == "none") ) {
+            if (data.tower != false && (player[this.layer].road === false || player[this.layer].currentTower == "none")) {
                 player[this.layer].placedTowers[data.tower]--
                 data.tower = false
                 //dont know why but second check is needed
@@ -188,11 +217,11 @@ addLayer("TD1", {
             },
 
             canClick() {
-                return player[this.layer].currentTower != "normal-tower" 
+                return player[this.layer].currentTower != "normal-tower"
             },
 
             onClick() {
-                return player[this.layer].currentTower = "normal-tower" 
+                return player[this.layer].currentTower = "normal-tower"
             },
 
             style: {
@@ -207,11 +236,30 @@ addLayer("TD1", {
             },
 
             canClick() {
-                return player[this.layer].currentTower != "wall-tower" 
+                return player[this.layer].currentTower != "wall-tower"
             },
 
             onClick() {
-                return player[this.layer].currentTower = "wall-tower" 
+                return player[this.layer].currentTower = "wall-tower"
+            },
+
+            style: {
+                "width": "100px",
+                "height": "100px"
+            }
+        },
+
+        "spread-tower-selector": {
+            display() {
+                return "Click this to place spread towers"
+            },
+
+            canClick() {
+                return player[this.layer].currentTower != "spread-tower"
+            },
+
+            onClick() {
+                return player[this.layer].currentTower = "spread-tower"
             },
 
             style: {
@@ -230,7 +278,7 @@ addLayer("TD1", {
             },
 
             onClick() {
-                return player[this.layer].currentTower = "none" 
+                return player[this.layer].currentTower = "none"
             },
 
             style: {
@@ -242,9 +290,9 @@ addLayer("TD1", {
     },
 
     buyables: {
-        11: {
+        "normal-tower-damage-upgrade": {
             cost(x) { return new Decimal(1.2).pow(x).mul(1).floor() },
-            display() { return "Upgrade damage by 1<br><b>Currently: </b>" + getBuyableAmount(this.layer, this.id).add(1).toString() + "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
+            display() { return "Upgrade damage by 1<br><b>Currently: </b>" + format(getBuyableAmount(this.layer, this.id).add(1)) + "<br><b>Cost: </b>" + format(this.cost(getBuyableAmount(this.layer, this.id))) },
             canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
             buy() {
                 player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
@@ -253,10 +301,10 @@ addLayer("TD1", {
             },
         },
 
-        12: {
-            cost(x) { return new Decimal(1.5).pow(x).mul(1).floor() },
-            display() { return "Decrease enemy delay by 5<br><b>Currently: </b>" + new Decimal(100).sub(getBuyableAmount(this.layer, this.id).mul(5)).toString() + "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
-            canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) && getBuyableAmount(this.layer, this.id).lt(19) },
+        "enemy-delay": {
+            cost(x) { return new Decimal(4).pow(x).mul(1).floor() },
+            display() { return "Decrease enemy delay by 5<br><b>Currently: </b>" + format(new Decimal(100).sub(getBuyableAmount(this.layer, this.id).mul(5))) + "<br><b>Cost: </b>" + format(this.cost(getBuyableAmount(this.layer, this.id))) },
+            canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) && getBuyableAmount(this.layer, this.id).lt(9) },
             buy() {
                 player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
@@ -264,9 +312,9 @@ addLayer("TD1", {
             }
         },
 
-        13: {
+        "currency-multiplayer": {
             cost(x) { return new Decimal(3).pow(x).mul(1).floor() },
-            display() { return "Increase currency multiplayer by 1<br><b>Currently: </b>" + player[this.layer].currencyMultiplayer + "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
+            display() { return "Increase currency multiplayer by 1<br><b>Currently: </b>" + format(player[this.layer].currencyMultiplayer) + "<br><b>Cost: </b>" + format(this.cost(getBuyableAmount(this.layer, this.id))) },
             canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
             buy() {
                 player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
@@ -275,9 +323,9 @@ addLayer("TD1", {
             }
         },
 
-        14: {
+        "enemy-count": {
             cost(x) { return new Decimal(4).pow(x).mul(1).floor() },
-            display() { return "Increase spawn count by 1<br><b>Currently: </b>" + player[this.layer].spawnCount + "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
+            display() { return "Increase spawn count by 1<br><b>Currently: </b>" + format(player[this.layer].spawnCount) + "<br><b>Cost: </b>" + format(this.cost(getBuyableAmount(this.layer, this.id))) },
             canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
             buy() {
                 player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
@@ -286,20 +334,31 @@ addLayer("TD1", {
             }
         },
 
-        15: {
+        "normal-tower-bullet-speed": {
             cost(x) { return new Decimal(10).pow(x).mul(1).floor() },
-            display() { return "Increase bullet speed by .1<br><b>Currently: </b>" + player[this.layer].maxParticleSpeed + "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
+            display() { return "Increase bullet speed by .1<br><b>Currently: </b>" + format(player[this.layer].towerStats["normal-tower"].maxParticleSpeed) + "<br><b>Cost: </b>" + format(this.cost(getBuyableAmount(this.layer, this.id))) },
             canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
             buy() {
                 player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
-                player[this.layer].maxParticleSpeed += .1
+                player[this.layer].towerStats["normal-tower"].maxParticleSpeed += .1
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            }
+        },
+
+        "spread-tower-count-upgrade": {
+            cost(x) { return new Decimal(10).pow(x).mul(5).floor() },
+            display() { return "Increase bullet count by 1<br><b>Currently: </b>" + format(player[this.layer].towerStats["spread-tower"].bulletCount) + "<br><b>Cost: </b>" + format(this.cost(getBuyableAmount(this.layer, this.id))) },
+            canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
+            buy() {
+                player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
+                player[this.layer].towerStats["spread-tower"].bulletCount += 1
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             }
         },
 
         "normal-tower-buyer": {
             cost(x) { return new Decimal(5).pow(x).mul(5).floor() },
-            display() { return "Increase number of normal towers by one<br><b>Currenly: </b>" + getBuyableAmount(this.layer, this.id) +  "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
+            display() { return "Increase number of normal towers by one<br><b>Currenly: </b>" + format(getBuyableAmount(this.layer, this.id)) + "<br><b>Cost: </b>" + format(this.cost(getBuyableAmount(this.layer, this.id))) },
             canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
             buy() {
                 player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
@@ -315,11 +374,26 @@ addLayer("TD1", {
 
         "wall-tower-buyer": {
             cost(x) { return new Decimal(2.5).pow(x).mul(3).floor() },
-            display() { return "Increase number of walls by one<br><b>Currenly: </b>" + getBuyableAmount(this.layer, this.id) +  "<br><b>Cost: </b>" + this.cost(getBuyableAmount(this.layer, this.id)).toString() },
+            display() { return "Increase number of walls by one<br><b>Currenly: </b>" + format(getBuyableAmount(this.layer, this.id)) + "<br><b>Cost: </b>" + format(this.cost(getBuyableAmount(this.layer, this.id))) },
             canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
             buy() {
                 player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
                 player[this.layer].boughtTowers["wall-tower"] += 1
+                setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
+            },
+            style: {
+                "width": "100px",
+                "height": "100px"
+            }
+        },
+
+        "spread-tower-buyer": {
+            cost(x) { return new Decimal(10).pow(x).mul(20).floor() },
+            display() { return "Increase number of spread towers by one<br><b>Currenly: </b>" + format(getBuyableAmount(this.layer, this.id)) + "<br><b>Cost: </b>" + format(this.cost(getBuyableAmount(this.layer, this.id))) },
+            canAfford() { return player[this.layer].points.gte(this.cost(getBuyableAmount(this.layer, this.id))) },
+            buy() {
+                player[this.layer].points = player[this.layer].points.sub(this.cost(getBuyableAmount(this.layer, this.id)))
+                player[this.layer].boughtTowers["spread-tower"] += 1
                 setBuyableAmount(this.layer, this.id, getBuyableAmount(this.layer, this.id).add(1))
             },
             style: {
@@ -347,30 +421,44 @@ addLayer("TD1", {
             enemies: [],
             towers: [],
             road: [],
-            spawnDelay: 100,
+            spawnDelay: 50,
             spawnWait: 0,
-            enemyDelay: 100,
-            maxParticleSpeed: .1,
+            enemyDelay: 50,
             currencyMultiplayer: 1,
             spawnCount: 1,
             boughtTowers: {
                 "normal-tower": 1,
-                "wall-tower": 1
+                "wall-tower": 1,
+                "spread-tower": 1
             },
             placedTowers: {
                 "normal-tower": 0,
-                "wall-tower": 0
+                "wall-tower": 0,
+                "spread-tower": 0
             },
             towerStats: {
                 "normal-tower": {
                     attackDelay: 30,
                     range: 5,
                     damage: 1,
+                    maxParticleSpeed: .1,
+                    particleLifespan: 1e10
                 },
                 "wall-tower": {
                     attackDelay: -1,
                     range: -1,
-                    damage: -1
+                    damage: -1,
+                    maxParticleSpeed: -1,
+                    particleLifespan: -1
+                },
+                "spread-tower": {
+                    attackDelay: 50,
+                    range: 5,
+                    damage: 1,
+                    maxParticleSpeed: .1,
+                    particleLifespan: 3,
+                    angleSpeed: .1,
+                    bulletCount: 4
                 }
             }
         }

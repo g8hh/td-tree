@@ -5,7 +5,6 @@ class Enemy {
     //with constructing also spawn enemy on the path
     constructor(hp, road, pos, delay, active, layer) {
         this.hp = hp
-        this.roundHp = hp
         this.road = road
         this.pos = pos
         this.delay = delay
@@ -28,7 +27,6 @@ function enemyTick(enemy) {
     if (enemy.active) {
         enemy.waitTime++
         if (enemy.waitTime >= enemy.delay) {
-            enemy.roundHp = enemy.hp
             enemyMove(enemy)
             enemy.waitTime = 0
         }
@@ -82,5 +80,6 @@ function enemyDamage(enemy, damage) {
 
 //returns enemy position as Object{row, col}
 function enemyGetPos(enemy) {
+    if(!enemy.active) return undefined
     return decodeGridId(enemy.road[enemy.pos])
 }
