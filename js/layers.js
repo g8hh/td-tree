@@ -136,6 +136,8 @@ addLayer("TD1", {
                     })
                 }
             }
+
+            player[this.layer].enemies.forEach(enemy => enemy.active = false)
             player[this.layer].enemies = []
 
 
