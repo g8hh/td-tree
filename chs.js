@@ -273,6 +273,8 @@ var cnRegReplace = new Map([
 	[/^([\d\.]+)\/([\d\.]+) Spread Towers$/, '$1\/$2 扩散塔'],
 	[/^([\d\.]+)\/([\d\.]+) Walls$/, '$1\/$2 墙'],
 	[/^([\d\.]+) essence$/, '$1 精华'],
+	[/^([\d\.,]+) essence$/, '$1 精华'],
+	[/^([\d\.]+)e([\d\.,]+) essence$/, '$1e$2 精华'],
 	[/^([\d\.]+) OOMs\/sec$/, '$1 OOMs\/秒'],
 	[/^([\d\.]+)\/sec$/, '$1\/秒'],
     [/^requires ([\d\.]+) more research points$/, '需要$1个研究点'],
