@@ -1,5 +1,5 @@
 let modInfo = {
-	name: "The TD Tree",
+	name: "塔防树 - The TD Tree",
 	id: "test-towerdefence-fk-v0.2",
 	author: "adsaf123",
 	pointsName: "points",
